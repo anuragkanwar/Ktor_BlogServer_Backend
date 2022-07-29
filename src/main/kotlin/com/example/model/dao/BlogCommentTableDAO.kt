@@ -2,12 +2,13 @@ package com.example.model.dao
 
 import com.example.data.database.CommentEntry
 import com.example.data.requests.AddComment
+import com.example.data.response.CommentResponse
 
 interface BlogCommentTableDAO {
 
     suspend fun getComments(
         blogId: Int
-    ) : List<CommentEntry>
+    ) : List<CommentResponse?>
 
     suspend fun addComment(
         comment: AddComment, userId: Int

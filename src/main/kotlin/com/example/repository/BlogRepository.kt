@@ -9,6 +9,7 @@ import com.example.model.dao.BlogTableDAO
 import com.example.model.table.BlogCommentTable
 import com.example.model.table.BlogTable
 import com.example.model.table.FavBlogTable
+import com.example.model.table.UserTable
 import com.example.repository.DatabaseFactory.dbQuery
 import org.jetbrains.exposed.sql.*
 
@@ -138,6 +139,14 @@ class BlogRepository : BlogTableDAO {
                 rowToBlog(it)
             }.singleOrNull()
 
+            val name = UserTable.slice(
+                UserTable.firstName, UserTable.lastName
+            ).select {
+                UserTable.id.eq(row?.userid)
+            }.map {
+                it[UserTable.firstName] + it[UserTable.lastName]
+            }.single()
+
             val bkmrkd = FavBlogTable.select {
                 FavBlogTable.blogId.eq(id) and FavBlogTable.userId.eq(userId)
             }.map {
@@ -167,6 +176,7 @@ class BlogRepository : BlogTableDAO {
                 imgUrl = row.imgUrl,
                 bookmarked = (bkmrkd != null),
                 comments = cmnts,
+                authorName = name
             )
 
         }

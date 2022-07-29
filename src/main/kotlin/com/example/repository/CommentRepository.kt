@@ -2,18 +2,36 @@ package com.example.repository
 
 import com.example.data.database.CommentEntry
 import com.example.data.requests.AddComment
+import com.example.data.response.CommentResponse
 import com.example.model.dao.BlogCommentTableDAO
 import com.example.model.table.BlogCommentTable
+import com.example.model.table.UserTable
 import com.example.repository.DatabaseFactory.dbQuery
 import org.jetbrains.exposed.sql.*
 
 class CommentRepository : BlogCommentTableDAO {
-    override suspend fun getComments(blogId: Int): List<CommentEntry> {
+    override suspend fun getComments(blogId: Int): List<CommentResponse?> {
         val row = dbQuery {
-            BlogCommentTable.select {
-                BlogCommentTable.blogId.eq(blogId)
-            }.mapNotNull {
-                rowToComment(it)
+//            BlogCommentTable.select {
+//                BlogCommentTable.blogId.eq(blogId)
+//            }.mapNotNull {
+//                rowToCommentResponse(it, "", "")
+//            }
+
+            BlogCommentTable.innerJoin(UserTable).slice(
+                BlogCommentTable.id,
+                BlogCommentTable.content,
+                BlogCommentTable.publishedAt,
+                BlogCommentTable.blogId,
+                BlogCommentTable.userId,
+                BlogCommentTable.likes,
+                UserTable.imgUrl,
+                UserTable.firstName,
+                UserTable.lastName
+            ).select {
+                BlogCommentTable.blogId.eq(blogId) and UserTable.id.eq(BlogCommentTable.userId)
+            }.map {
+                rowToCommentResponse(it)
             }
         }
         return row
@@ -65,6 +83,23 @@ class CommentRepository : BlogCommentTableDAO {
                 content = resultRow[BlogCommentTable.content],
                 likes = resultRow[BlogCommentTable.likes],
                 publishedAt = resultRow[BlogCommentTable.publishedAt]
+            )
+        }
+    }
+
+    private fun rowToCommentResponse(resultRow: ResultRow?): CommentResponse? {
+        return if (resultRow == null) {
+            null
+        } else {
+            CommentResponse(
+                id = resultRow[BlogCommentTable.id].value,
+                blogId = resultRow[BlogCommentTable.blogId],
+                UserId = resultRow[BlogCommentTable.userId],
+                content = resultRow[BlogCommentTable.content],
+                likes = resultRow[BlogCommentTable.likes],
+                publishedAt = resultRow[BlogCommentTable.publishedAt],
+                UserImage = resultRow[UserTable.imgUrl],
+                UserName = resultRow[UserTable.firstName] + resultRow[UserTable.lastName]
             )
         }
     }

@@ -17,5 +17,6 @@ data class BlogResponse(
     val likes: Long,
     val imgUrl: String,
     val bookmarked : Boolean,
-    val comments: List<CommentEntry>
+    val comments: List<CommentEntry>,
+    val authorName : String
 )
