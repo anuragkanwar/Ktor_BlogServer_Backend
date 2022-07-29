@@ -37,7 +37,7 @@ class CommentRepository : BlogCommentTableDAO {
         return row
     }
 
-    override suspend fun addComment(comment: AddComment, userId: Int): CommentEntry? {
+    override suspend fun addComment(comment: AddComment, userId: Int): CommentResponse? {
         val row = dbQuery {
             BlogCommentTable.insert { tbl ->
                 tbl[BlogCommentTable.blogId] = comment.blogId
@@ -47,7 +47,15 @@ class CommentRepository : BlogCommentTableDAO {
                 tbl[BlogCommentTable.likes] = 0
             }
         }
-        return rowToComment(row.resultedValues?.get(0))
+
+        val extraData = dbQuery {
+            UserTable.slice(UserTable.imgUrl, UserTable.firstName, UserTable.lastName).select {
+                UserTable.id eq row.resultedValues?.get(0)?.get(BlogCommentTable.userId)
+            }.map {
+                listOf(it[UserTable.imgUrl], it[UserTable.firstName], it[UserTable.lastName])
+            }.single()
+        }
+        return rowToComment(row.resultedValues?.get(0), extraData)
     }
 
     override suspend fun editComment(comment: CommentEntry, userId: Int): Int {
@@ -72,17 +80,19 @@ class CommentRepository : BlogCommentTableDAO {
     }
 
 
-    private fun rowToComment(resultRow: ResultRow?): CommentEntry? {
+    private fun rowToComment(resultRow: ResultRow?, extraData: List<String>): CommentResponse? {
         return if (resultRow == null) {
             null
         } else {
-            CommentEntry(
+            CommentResponse(
                 id = resultRow[BlogCommentTable.id].value,
                 blogId = resultRow[BlogCommentTable.blogId],
                 UserId = resultRow[BlogCommentTable.userId],
                 content = resultRow[BlogCommentTable.content],
                 likes = resultRow[BlogCommentTable.likes],
-                publishedAt = resultRow[BlogCommentTable.publishedAt]
+                publishedAt = resultRow[BlogCommentTable.publishedAt],
+                UserName = extraData[1] + " " + extraData[2],
+                UserImage = extraData[0]
             )
         }
     }

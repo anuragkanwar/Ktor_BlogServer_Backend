@@ -12,7 +12,7 @@ interface BlogCommentTableDAO {
 
     suspend fun addComment(
         comment: AddComment, userId: Int
-    ): CommentEntry?
+    ): CommentResponse?
 
     suspend fun editComment(
         comment: CommentEntry, userId: Int
