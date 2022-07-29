@@ -19,6 +19,23 @@ fun Route.commentRoutes(
         route("v1/comment")
         {
 
+            get("/{id}") {
+                val id = try {
+                    call.parameters["id"]!!.toInt()
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, SimpleResponse(false, "${e.message} 1", null))
+                    return@get
+                }
+                try {
+                    val userId = call.principal<UserEntry>()!!.id
+                    val comment = commentRepository.getComments(id)
+                    call.respond(HttpStatusCode.OK, SimpleResponse(true, "success", comment))
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadGateway, SimpleResponse(false, "2. Something happened !!", null))
+                    return@get
+                }
+            }
+
             post("/add") {
                 val parameters = try {
                     call.receive<AddComment>()

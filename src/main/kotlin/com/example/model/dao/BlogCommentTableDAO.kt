@@ -5,6 +5,10 @@ import com.example.data.requests.AddComment
 
 interface BlogCommentTableDAO {
 
+    suspend fun getComments(
+        blogId: Int
+    ) : List<CommentEntry>
+
     suspend fun addComment(
         comment: AddComment, userId: Int
     ): CommentEntry?

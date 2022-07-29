@@ -8,6 +8,17 @@ import com.example.repository.DatabaseFactory.dbQuery
 import org.jetbrains.exposed.sql.*
 
 class CommentRepository : BlogCommentTableDAO {
+    override suspend fun getComments(blogId: Int): List<CommentEntry> {
+        val row = dbQuery {
+            BlogCommentTable.select {
+                BlogCommentTable.blogId.eq(blogId)
+            }.mapNotNull {
+                rowToComment(it)
+            }
+        }
+        return row
+    }
+
     override suspend fun addComment(comment: AddComment, userId: Int): CommentEntry? {
         val row = dbQuery {
             BlogCommentTable.insert { tbl ->
